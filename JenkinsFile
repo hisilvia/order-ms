@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/silvia/order-ms.git'
+                git branch: 'main', url: 'https://github.com/hisilvia/order-ms.git'
             }
         }
         stage('Build & Test') {
@@ -18,7 +18,7 @@ pipeline {
                  maven "mvn"
             }
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean install -DskipTests'
             }
         }
         stage('Docker Build & Push') {
