@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKER_IMAGE = "silvia2025/orderms"
+        DOCKER_IMAGE = "silvia2025/order-ms"
         KUBE_CONFIG = "/home/ubuntu/.kube/config"
         AWS_REGION = "eu-west-1"
         EKS_CLUSTER_NAME = "order-cluster"
@@ -10,10 +10,13 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/neerajbalodi/order-ms.git'
+                git branch: 'main', url: 'https://github.com/silvia/order-ms.git'
             }
         }
         stage('Build & Test') {
+            tools {
+                 maven "mvn"
+            }
             steps {
                 sh 'mvn clean package -DskipTests'
             }
@@ -28,8 +31,8 @@ pipeline {
                     sh 'docker build -t $DOCKER_IMAGE:latest .'
 
                     // Login to DockerHub
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASSW')]) {
+                        sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
                     }
 
                     // Push the Docker image to DockerHub
@@ -40,12 +43,10 @@ pipeline {
         stage('Deploy to EKS') {
     steps {
         script {
-            withCredentials([[
-                $class: 'AmazonWebServicesCredentialsBinding',
-                credentialsId: 'aws-creds',  // Jenkins credential ID for AWS keys
-                accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-            ]]) {
+            withCredentials([
+                        string(credentialsId: 'access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'secret-key-id', variable: 'AWS_SECRET_ACCESS_KEY')
+                        ]) {
                 sh """
                     # Configure kubectl for EKS
                     aws eks update-kubeconfig \
