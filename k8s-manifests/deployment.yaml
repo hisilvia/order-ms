@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: order-ms
-        image: silvia2025/orderms:latest
+        image: silvia2025/order-ms:latest
         ports:
         - containerPort: 8080
